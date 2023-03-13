@@ -18,4 +18,4 @@ python3 main.py
 ```
 
 ## Preview
-![index](https://raw.githubusercontent.com/MrG3P5/Domain-Grabber/main/Screenshot_20230212-151957_Termux.png)
+![index](https://raw.githubusercontent.com/MrG3P5/Domain-Grabber/main/Screenshot_2023-03-13_06_43_08.png)
