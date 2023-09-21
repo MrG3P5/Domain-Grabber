@@ -1,97 +1,103 @@
 #!/usr/bin/env python3
 import requests
 import re
-import pyfiglet
+import sys
 import os
+import time
 from colorama import Fore, init
-from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
+from multiprocessing.dummy import Pool as ThreadPool
 
-# Color
-green = Fore.LIGHTGREEN_EX
-red = Fore.LIGHTRED_EX
-white = Fore.WHITE
-cyan = Fore.LIGHTCYAN_EX
-yellow = Fore.LIGHTYELLOW_EX
+requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
+try:
+    os.mkdir("Result")
+except:
+    pass
+
+all_pages_link = []
 init(autoreset=True)
 
-class DomainGrabber:
+def Banner():
+    os.system("cls" if os.name == "nt" else "clear")
+    __banner__ = f"""{Fore.LIGHTRED_EX}
+  ⣴⣶⣤⡤⠦⣤⣀⣤⠆      ⣈⣭⣭⣿⣶⣿⣦⣼⣆⠄
+   ⠉⠻⢿⣿⠿⣿⣿⣶⣦⠤⠄⡠⢾⣿⣿⡿⠋⠉⠉⠻⣿⣿⡛⣦⠄
+           ⠈⢿⣿⣟⠦⠄⣾⣿⣿⣷⠄⠄⠄⠄⠻⠿⢿⣿⣧⣄
+            ⣸⣿⣿⢧ ⢻⠻⣿⣿⣷⣄⣀⠄⠢⣀⡀⠈⠙⠿
+           ⢠⣿⣿⣿⠈  ⠡⠌⣻⣿⣿⣿⣿⣿⣿⣿⣛⣳⣤⣀⣀
+   ⢠⣧⣶⣥⡤⢄⠄⣸⣿⣿   ⢀⣴⣿⣿⡿⠛⣿⣿⣧⠈⢿⠿⠟⠛⠻⠿⠄
+ ⣰⣿⣿⠛⠻⣿⣿⡦⢹⣿⣷   ⢊⣿⣿⡏⠄⠄⢸⣿⣿⡇⠄⢀⣠⣄⣾⠄     {Fore.LIGHTCYAN_EX}[ {Fore.WHITE}Domain Grabber With Thread {Fore.LIGHTCYAN_EX}]
+{Fore.LIGHTRED_EX}⣠⣿⠿⠛  ⣿⣿⣷⠘⢿⣿⣦⡀ ⢸⢿⣿⣿⣄⠄⣸⣿⣿⡇⣪⣿⡿⠿⣿⣷⡄        {Fore.LIGHTCYAN_EX}[ {Fore.WHITE}Created By X-MrG3P5 {Fore.LIGHTCYAN_EX}]
+{Fore.LIGHTRED_EX}⠙⠃    ⣼⣿⡟⠌ ⠈⠻⣿⣿⣦⣌⡇⠻⣿⣿⣷⣿⣿⣿⠐⣿⣿⡇⠄⠛⠻⢷⣄
+      ⢻⣿⣿⣄⠄  ⠈⠻⣿⣿⣿⣷⣿⣿⣿⣿⣿⡟⠄⠫⢿⣿⡆    
+       ⠻⣿⣿⣿⣿⣶⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⡟⢀⣀⣤⣾⡿⠃"""
+    print(__banner__ + "\n")
 
-    def banner():
-        os.system("cls||clear")
-        __banner__ = pyfiglet.figlet_format("X - Grabber", font="slant", justify="center")
-        print(red + __banner__)
-        print(f"\t\t\t{red}[ {white}Created By X - MrG3P5 {red}]\n")
-        print(f"{red}[{white}1{red}] {white}Domain Grabber By TLD")
-        print(f"{red}[{white}2{red}] {white}Domain Grabber By Date")
-        print("")
+def Menu():
+    Banner()
+    CubDomain()
 
-    def daterange(start_date, end_date):
-        for n in range(int((end_date - start_date).days) + 1):
-            yield start_date + timedelta(n)
+def CubDomain_GetDomain(urls: str):
+    try:
+        req = requests.get(urls, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
+        }, timeout=15).text
 
-    def checkTLD(domain):
-        req = requests.get("https://zoxh.com/tld").text
-        all_tld = re.findall('/tld/(.*?)"', req)
-        if domain in all_tld:
-            return True
+        all_domains = re.findall('<a href="https://www.cubdomain.com/site/(.*?)">', req)
+        
+        if len(all_domains) == 1:
+            sys.stdout.write(f"\n{Fore.LIGHTCYAN_EX}[{Fore.LIGHTBLUE_EX}-{Fore.LIGHTCYAN_EX}] {Fore.WHITE}Failed Grabbed")
         else:
-            return False
+            sys.stdout.write(f"\n{Fore.LIGHTCYAN_EX}[{Fore.LIGHTBLUE_EX}-{Fore.LIGHTCYAN_EX}] {Fore.WHITE}Grabbed {Fore.LIGHTGREEN_EX}{len(all_domains)} {Fore.WHITE}Domain")
+            open("Result/cubdomain_bydate.txt", "a").write("\n".join(all_domains))
+    except:
+        pass
+
+def CubDomain_GetAllPages(date: str):
+    global all_pages_link
     
-    def TLD(domain_tld):
-        req = requests.get(f"https://zoxh.com/tld/{domain_tld}").text
-        total_domain = int(re.findall(f'href="/tld/{domain_tld}/(.*?)"', req)[-2])
+    try:
+        req = requests.get(f"https://www.cubdomain.com/domains-registered-by-date/{date}/1", headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
+        }, timeout=15).text
+        all_pages = re.findall('<a class="page-link" href="(.*?)">', req)[:-1]
+        for j in all_pages:
+            all_pages_link.append(j)
+    except:
+        pass
 
-        for i in range(total_domain):
-            i += 1
-            try:
-            
-                req_grab = requests.get(f"https://zoxh.com/tld/{domain_tld}/{i}").text
-                all_domain = "\n".join(re.findall('/i/(.*?)"', req)).strip("\r\n")
-                total_domain = len(all_domain.split("\n"))
-                open(f"result/tld_{domain_tld}.txt", "a").write(all_domain + "\n")
-                print(f"{red}[{white}*{red}] {white}Grabbed {green}{total_domain} {white}Domain | Page {green}{i}")
-            except:
-                pass
+def daterange(start_date, end_date):
+    for n in range(int((end_date - start_date).days) + 1):
+        yield start_date + timedelta(n)
 
-    def ByDate(date1, date2):
-        for this_date in DomainGrabber.daterange(date1, date2):
-            tgl = str(this_date.year) + "-" + str(this_date.month).zfill(2) + "-" + str(this_date.day).zfill(2)
-            try:
-                req = requests.get(f"https://www.cubdomain.com/domains-registered-by-date/{tgl}/1", headers={
-                    "User-Agent": "Mozilla/5.0 (Linux; Android 11; M2102K1G) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36"
-                })
-                soup = BeautifulSoup(req.text, "html5lib")
-                a = soup.find("ul", { "class": ["pagination-sm", "pagination", "mb-2"]})
-                total_page = a.find_all("a", { "class": "page-link" })[-2].text
-                
-                for y in range(int(total_page)):
-                    y += 1
-                    req_2 = requests.get(f"https://www.cubdomain.com/domains-registered-by-date/{tgl}/{y}", headers={
-                        "User-Agent": "Mozilla/5.0 (Linux; Android 11; M2102K1G) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36"
-                    })
-                    soups = BeautifulSoup(req_2.text, "html5lib")
-                    all_domain = re.findall('https://www.cubdomain.com/site/(.*?)"', req_2.text)
-                    open("result/bydate.txt", "a").write("\n".join(all_domain))
-                    print(f"{red}[{white}*{red}] {white}(Date: {green}{tgl} {white}| Page: {green}{y}{white}) Grabbed {green}{len(all_domain)} {white}Domain")
-            except:
-                pass
+def CubDomain():
+    global all_pages_link
 
+    date1 = datetime.strptime(input(f"{Fore.LIGHTCYAN_EX}[{Fore.LIGHTGREEN_EX}?{Fore.LIGHTCYAN_EX}] {Fore.WHITE}From Date (ex: YYYY-mm-dd) : "), "%Y-%m-%d")
+    date2 = datetime.strptime(input(f"{Fore.LIGHTCYAN_EX}[{Fore.LIGHTGREEN_EX}?{Fore.LIGHTCYAN_EX}] {Fore.WHITE}To Date (ex: YYYY-mm-dd) : "), "%Y-%m-%d")
+    date_arr = [ f"{str(this_date.year)}-{str(this_date.month).zfill(2)}-{str(this_date.day).zfill(2)}" for this_date in daterange(date1, date2) ]
 
-if __name__=="__main__":
-    DomainGrabber.banner()
-    choose = input(f"{red}[{white}?{red}] {white}Choose : ")
-    if choose == "1":
-        input_tld = input(f"{red}[{white}?{red}] {white}TLD (ex: id) : ")
+    print(f"{Fore.LIGHTCYAN_EX}[{Fore.LIGHTGREEN_EX}-{Fore.LIGHTCYAN_EX}] {Fore.WHITE}Grabbing All Pages")
 
-        if DomainGrabber.checkTLD(input_tld):
-            DomainGrabber.TLD(input_tld)
-        else:
-            exit(f"{red}[{yellow}!{red}] {white}Unknown Domain TLD")
-    elif choose == "2":
-        date1 = datetime.strptime(input(f"{red}[{white}?{red}] {white}From Date (ex: YYYY-mm-dd) : "), '%Y-%m-%d')
-        date2 = datetime.strptime(input(f"{red}[{white}?{red}] {white}To Date (ex: YYYY-mm-dd) : "), '%Y-%m-%d')
-        DomainGrabber.ByDate(date1, date2)
-    else:
-        exit(f"{red}[{yellow}!{red}] {white}Unknown Option")
+    start_time = time.time()
+
+    pool = ThreadPool(100)
+    pool.map(CubDomain_GetAllPages, date_arr)
+    pool.close()
+    pool.join()
+
+    print(f"{Fore.LIGHTCYAN_EX}[{Fore.LIGHTGREEN_EX}-{Fore.LIGHTCYAN_EX}] {Fore.WHITE}Grabbing Domain From {Fore.LIGHTGREEN_EX}{len(all_pages_link)} {Fore.WHITE}Pages")
+
+    pools = ThreadPool(100)
+    pools.map(CubDomain_GetDomain, all_pages_link)
+    pools.close()
+    pools.join()
+
+    end_time = time.time()
+
+    print(f"\n\n{Fore.LIGHTCYAN_EX}[{Fore.LIGHTGREEN_EX}-{Fore.LIGHTCYAN_EX}] {Fore.WHITE}Done Grabbing {Fore.LIGHTGREEN_EX}{len(open('Result/cubdomain_bydate.txt', 'r').readlines())} {Fore.WHITE}Domain")
+    print(f"{Fore.LIGHTCYAN_EX}[{Fore.LIGHTGREEN_EX}-{Fore.LIGHTCYAN_EX}] {Fore.WHITE}Time Taken {Fore.LIGHTGREEN_EX}{str(end_time - start_time).split('.')[0]} {Fore.WHITE}Sec")
+
+if __name__ == "__main__":
+    Menu()
