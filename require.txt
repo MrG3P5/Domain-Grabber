@@ -1,4 +1,2 @@
-html5lib
+colorama
 requests
-bs4
-pyfiglet
