@@ -12,6 +12,7 @@ requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.
 
 try:
     os.mkdir("Result")
+    open("Result/cubdomain_bydate.txt", "a")
 except:
     pass
 
