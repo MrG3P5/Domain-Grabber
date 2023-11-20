@@ -12,7 +12,6 @@ requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.
 
 try:
     os.mkdir("Result")
-    open("Result/cubdomain_bydate.txt", "a")
 except:
     pass
 
@@ -37,7 +36,20 @@ def Banner():
 
 def Menu():
     Banner()
-    CubDomain()
+    menus = f"""{Fore.LIGHTRED_EX}[{Fore.WHITE}1{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber By Date
+{Fore.LIGHTRED_EX}[{Fore.WHITE}2{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber By KeyWord\n"""
+    print(menus)
+    choose = int(input(f"{Fore.LIGHTRED_EX}[{Fore.WHITE}?{Fore.LIGHTRED_EX}] {Fore.WHITE}Choose : "))
+
+    if choose == 1:
+        CubDomain()
+    elif choose == 2:
+        input_list = [ j.strip("\n\r") for j in open(input(f"{Fore.LIGHTRED_EX}[{Fore.WHITE}?{Fore.LIGHTRED_EX}] {Fore.WHITE}KeyWord List : "), "r", encoding="utf-8").readlines() ]
+
+        for x in input_list:
+            GrabberByKw(x)
+    else:
+        exit(f"{Fore.LIGHTRED_EX}[{Fore.WHITE}!{Fore.LIGHTRED_EX}] {Fore.LIGHTYELLOW_EX}Aborted.")
 
 def CubDomain_GetDomain(urls: str):
     try:
@@ -75,8 +87,8 @@ def daterange(start_date, end_date):
 def CubDomain():
     global all_pages_link
 
-    date1 = datetime.strptime(input(f"{Fore.LIGHTCYAN_EX}[{Fore.LIGHTGREEN_EX}?{Fore.LIGHTCYAN_EX}] {Fore.WHITE}From Date (ex: YYYY-mm-dd) : "), "%Y-%m-%d")
-    date2 = datetime.strptime(input(f"{Fore.LIGHTCYAN_EX}[{Fore.LIGHTGREEN_EX}?{Fore.LIGHTCYAN_EX}] {Fore.WHITE}To Date (ex: YYYY-mm-dd) : "), "%Y-%m-%d")
+    date1 = datetime.strptime(input(f"{Fore.LIGHTRED_EX}[{Fore.WHITE}?{Fore.LIGHTRED_EX}] {Fore.WHITE}From Date (ex: YYYY-mm-dd) : "), "%Y-%m-%d")
+    date2 = datetime.strptime(input(f"{Fore.LIGHTRED_EX}[{Fore.WHITE}?{Fore.LIGHTRED_EX}] {Fore.WHITE}To Date (ex: YYYY-mm-dd) : "), "%Y-%m-%d")
     date_arr = [ f"{str(this_date.year)}-{str(this_date.month).zfill(2)}-{str(this_date.day).zfill(2)}" for this_date in daterange(date1, date2) ]
 
     print(f"{Fore.LIGHTCYAN_EX}[{Fore.LIGHTGREEN_EX}-{Fore.LIGHTCYAN_EX}] {Fore.WHITE}Grabbing All Pages")
@@ -99,6 +111,19 @@ def CubDomain():
 
     print(f"\n\n{Fore.LIGHTCYAN_EX}[{Fore.LIGHTGREEN_EX}-{Fore.LIGHTCYAN_EX}] {Fore.WHITE}Done Grabbing {Fore.LIGHTGREEN_EX}{len(open('Result/cubdomain_bydate.txt', 'r').readlines())} {Fore.WHITE}Domain")
     print(f"{Fore.LIGHTCYAN_EX}[{Fore.LIGHTGREEN_EX}-{Fore.LIGHTCYAN_EX}] {Fore.WHITE}Time Taken {Fore.LIGHTGREEN_EX}{str(end_time - start_time).split('.')[0]} {Fore.WHITE}Sec")
+
+def GrabberByKw(kw):
+    req = requests.get("https://iqwhois.com/search/" + kw, headers={
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
+    }).text
+    all_domain = re.findall('class="conn-domain-name-class">(.*?)</span>', req)
+    
+    if len(all_domain) != 0:
+        sys.stdout.write(f"\n{Fore.WHITE}---> Keyword : {Fore.LIGHTBLUE_EX}{kw} {Fore.WHITE}-- Got {Fore.LIGHTGREEN_EX}{len(all_domain)} {Fore.WHITE}Domain")
+        open("Result/domain_keyword.txt", "a").write("\n".join(all_domain) + "\n")
+    else:
+        print(req)
+        sys.stdout.write(f"\n{Fore.WHITE}---> Keyword : {Fore.LIGHTBLUE_EX}{kw} {Fore.WHITE}-- {Fore.LIGHTRED_EX}Bad Keyword")
 
 if __name__ == "__main__":
     Menu()
