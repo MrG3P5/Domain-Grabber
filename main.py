@@ -3,6 +3,7 @@ import requests
 import re
 import sys
 import os
+import string
 import time
 from colorama import Fore, init
 from datetime import datetime, timedelta
@@ -36,8 +37,12 @@ def Banner():
 
 def Menu():
     Banner()
-    menus = f"""{Fore.LIGHTRED_EX}[{Fore.WHITE}1{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber By Date
-{Fore.LIGHTRED_EX}[{Fore.WHITE}2{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber By KeyWord\n"""
+    menus = f"""
+{Fore.LIGHTRED_EX}[{Fore.WHITE}1{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber By Date
+{Fore.LIGHTRED_EX}[{Fore.WHITE}2{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber By KeyWord
+{Fore.LIGHTRED_EX}[{Fore.WHITE}3{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber By TLD (azstats.org)
+{Fore.LIGHTRED_EX}[{Fore.WHITE}4{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber By TLD (pagesinventory.com)
+{Fore.LIGHTRED_EX}[{Fore.WHITE}5{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber By TLD (topsitessearch.com)\n"""
     print(menus)
     choose = int(input(f"{Fore.LIGHTRED_EX}[{Fore.WHITE}?{Fore.LIGHTRED_EX}] {Fore.WHITE}Choose : "))
 
@@ -48,8 +53,78 @@ def Menu():
 
         for x in input_list:
             GrabberByKw(x)
+    elif choose == 3:
+        inp_tld = input(f"{Fore.LIGHTRED_EX}[{Fore.WHITE}?{Fore.LIGHTRED_EX}] {Fore.WHITE}TLD Domain (ex: com) : ")
+        list_url = GenerateTldLink(inp_tld)
+        
+        start_time = time.time()
+        
+        pool = ThreadPool(20)
+        pool.map(GrabTld, list_url)
+        pool.close()
+        pool.join()
+        
+        end_time = time.time()
+
+        print(f"{Fore.LIGHTCYAN_EX}[{Fore.LIGHTGREEN_EX}-{Fore.LIGHTCYAN_EX}] {Fore.WHITE}Time Taken {Fore.LIGHTGREEN_EX}{str(end_time - start_time).split('.')[0]} {Fore.WHITE}Sec")
+    elif choose == 4:
+        inp_tld = input(f"{Fore.LIGHTRED_EX}[{Fore.WHITE}?{Fore.LIGHTRED_EX}] {Fore.WHITE}TLD Domain (ex: com) : ")
+        list_url = GenerateTLD2(inp_tld)
+        
+        start_time = time.time()
+        
+        pool = ThreadPool(20)
+        pool.map(GrabTld2, list_url)
+        pool.close()
+        pool.join()
+        
+        end_time = time.time()
+
+        print(f"\n{Fore.LIGHTCYAN_EX}[{Fore.LIGHTGREEN_EX}-{Fore.LIGHTCYAN_EX}] {Fore.WHITE}Time Taken {Fore.LIGHTGREEN_EX}{str(end_time - start_time).split('.')[0]} {Fore.WHITE}Sec")
+    elif choose == 5:
+        inp_tld = input(f"{Fore.LIGHTRED_EX}[{Fore.WHITE}?{Fore.LIGHTRED_EX}] {Fore.WHITE}TLD Domain (ex: com) : ")
+        inp_page = int(input(f"{Fore.LIGHTRED_EX}[{Fore.WHITE}?{Fore.LIGHTRED_EX}] {Fore.WHITE}Total Page (ex: 100) : "))
+        list_url = GeneratePageTopSite(inp_tld, inp_page)
+        
+        start_time = time.time()
+        
+        pool = ThreadPool(20)
+        pool.map(GrabTopSite, list_url)
+        pool.close()
+        pool.join()
+        
+        end_time = time.time()
+
+        print(f"\n{Fore.LIGHTCYAN_EX}[{Fore.LIGHTGREEN_EX}-{Fore.LIGHTCYAN_EX}] {Fore.WHITE}Time Taken {Fore.LIGHTGREEN_EX}{str(end_time - start_time).split('.')[0]} {Fore.WHITE}Sec")
     else:
         exit(f"{Fore.LIGHTRED_EX}[{Fore.WHITE}!{Fore.LIGHTRED_EX}] {Fore.LIGHTYELLOW_EX}Aborted.")
+
+def GrabTopSite(url):
+    try:
+        page = url.split("/")[-1]
+        req = requests.get(url, timeout=10)
+        domains = re.findall(r'domain=(.*?)"', req.text)
+        
+        if len(domains) == 0:
+            sys.stdout.write(f"\n{Fore.WHITE}---> {Fore.LIGHTBLUE_EX}0 {Fore.WHITE}Domain Grabbed From Page {page}!")
+        else:
+            sys.stdout.write(f"\n{Fore.WHITE}---> {Fore.LIGHTBLUE_EX}{len(domains)} {Fore.WHITE}Domain Grabbed From Page {page}!")
+            
+            for domain in domains:
+                open("Result/grab_tld.txt", "a").write(domain + "\n")
+    except:
+        sys.stdout.write(f"\n{Fore.WHITE}---> {Fore.LIGHTBLUE_EX}0 {Fore.WHITE}Domain Grabbed From Page {page}!")
+
+def GeneratePageTopSite(tld, totalPage):
+    try:
+        arr = []
+        
+        for i in range(1, totalPage + 1):
+            arr.append(f"https://www.topsitessearch.com/domains/.{tld}/{i}")
+        
+        return arr
+    except:
+        return []
 
 def CubDomain_GetDomain(urls: str):
     try:
@@ -79,6 +154,56 @@ def CubDomain_GetAllPages(date: str):
             all_pages_link.append(j)
     except:
         pass
+
+def GenerateTLD2(tld):
+    try:
+        arr = []
+        
+        for x in string.ascii_lowercase:
+            arr.append(f"https://www.pagesinventory.com/tld/{tld}/{x}.html")
+        
+        return arr
+    except:
+        return []
+
+def GrabTld2(url):
+    try:
+        req = requests.get(url, timeout=5)
+        domains = re.findall(r'href="/domain/(.*?).html"', req.text)
+        
+        if len(domains) != 0:
+            sys.stdout.write(f"\n{Fore.WHITE}---> {Fore.LIGHTBLUE_EX}{len(domains)} {Fore.WHITE}Grabbed!")
+            for domain in domains:
+                open("Result/grab_tld.txt", "a").write(domain + "\n")
+        else:
+            sys.stdout.write(f"\n{Fore.WHITE}---> {Fore.LIGHTBLUE_EX}0 {Fore.WHITE}Grabbed!")
+    except:
+        sys.stdout.write(f"\n{Fore.WHITE}---> {Fore.LIGHTBLUE_EX}0 {Fore.WHITE}Grabbed!")
+
+def GrabTld(url):
+    try:
+        req = requests.get(url, timeout=5)
+        domains = re.findall(r'href="/site/(.*?)/"', req.text)
+        
+        if len(domains) != 0:
+            sys.stdout.write(f"\n{Fore.WHITE}---> {Fore.LIGHTBLUE_EX}{len(domains)} {Fore.WHITE}Grabbed!")
+            for domain in domains:
+                open("Result/grab_tld.txt", "a").write(domain + "\n")
+        else:
+            sys.stdout.write(f"\n{Fore.WHITE}---> {Fore.LIGHTBLUE_EX}0 {Fore.WHITE}Grabbed!")
+    except:
+        sys.stdout.write(f"\n{Fore.WHITE}---> {Fore.LIGHTBLUE_EX}0 {Fore.WHITE}Grabbed!")
+
+def GenerateTldLink(tld):
+    try:
+        arr = []
+        
+        for x in range(1, 101):
+            arr.append(f"https://azstats.org/top/domain-zone/{tld}/{x}")
+
+        return arr
+    except:
+        return []
 
 def daterange(start_date, end_date):
     for n in range(int((end_date - start_date).days) + 1):
