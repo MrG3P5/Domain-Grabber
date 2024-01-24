@@ -42,7 +42,9 @@ def Menu():
 {Fore.LIGHTRED_EX}[{Fore.WHITE}2{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber By KeyWord
 {Fore.LIGHTRED_EX}[{Fore.WHITE}3{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber By TLD (azstats.org)
 {Fore.LIGHTRED_EX}[{Fore.WHITE}4{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber By TLD (pagesinventory.com)
-{Fore.LIGHTRED_EX}[{Fore.WHITE}5{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber By TLD (topsitessearch.com)\n"""
+{Fore.LIGHTRED_EX}[{Fore.WHITE}5{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber By TLD (topsitessearch.com)
+{Fore.LIGHTRED_EX}[{Fore.WHITE}6{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber Domain Random (www.topmillion.net)
+{Fore.LIGHTRED_EX}[{Fore.WHITE}7{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber By Date (www.dubdomain.com)\n"""
     print(menus)
     choose = int(input(f"{Fore.LIGHTRED_EX}[{Fore.WHITE}?{Fore.LIGHTRED_EX}] {Fore.WHITE}Choose : "))
 
@@ -96,8 +98,55 @@ def Menu():
         end_time = time.time()
 
         print(f"\n{Fore.LIGHTCYAN_EX}[{Fore.LIGHTGREEN_EX}-{Fore.LIGHTCYAN_EX}] {Fore.WHITE}Time Taken {Fore.LIGHTGREEN_EX}{str(end_time - start_time).split('.')[0]} {Fore.WHITE}Sec")
+    elif choose == 6:
+        list_url = getTopMilionPageUrl()
+        
+        start_time = time.time()
+        
+        pool = ThreadPool(20)
+        pool.map(grabTopMilionPageUrl, list_url)
+        pool.close()
+        pool.join()
+        
+        end_time = time.time()
+
+        print(f"\n{Fore.LIGHTCYAN_EX}[{Fore.LIGHTGREEN_EX}-{Fore.LIGHTCYAN_EX}] {Fore.WHITE}Time Taken {Fore.LIGHTGREEN_EX}{str(end_time - start_time).split('.')[0]} {Fore.WHITE}Sec")
     else:
         exit(f"{Fore.LIGHTRED_EX}[{Fore.WHITE}!{Fore.LIGHTRED_EX}] {Fore.LIGHTYELLOW_EX}Aborted.")
+
+def getTopMilionPageUrl():
+    try:
+        req = requests.get("https://www.topmillion.net/pages/websites/", headers={
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        })
+
+        LastPage = re.findall(r'/pages/websites/page/(.*?)/', req.text)[-1]
+        arr = []
+        for page in range(1, int(LastPage) + 1):
+            arr.append(f"https://www.topmillion.net/pages/websites/page/{str(page)}/")
+            
+        return arr
+    except:
+        return []
+
+def grabTopMilionPageUrl(url):
+    try:
+        page = url.split("/")[-2]
+        req = requests.get(url, headers={
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        })
+
+        domains = [j.replace("?", "").replace("https://", "").replace("http://", "") for j in re.findall(r'http://s.wordpress.com/mshots/v1/(.*?)?w=400', req.text)]
+        
+        if len(domains) != 0:
+            sys.stdout.write(f"\n{Fore.WHITE}---> {Fore.LIGHTBLUE_EX}{len(domains)} {Fore.WHITE}Domain Grabbed From Page {page}!")
+            
+            for domain in domains:
+                open("Result/Random-Domain.txt", "a").write(domain + "\n")
+        else:
+            sys.stdout.write(f"\n{Fore.WHITE}---> {Fore.LIGHTBLUE_EX}0 {Fore.WHITE}Domain Grabbed From Page {page}!")
+    except:
+        sys.stdout.write(f"\n{Fore.WHITE}---> {Fore.LIGHTBLUE_EX}0 {Fore.WHITE}Domain Grabbed From Page {page}!")
 
 def GrabTopSite(url):
     try:
@@ -220,14 +269,14 @@ def CubDomain():
 
     start_time = time.time()
 
-    pool = ThreadPool(100)
+    pool = ThreadPool(20)
     pool.map(CubDomain_GetAllPages, date_arr)
     pool.close()
     pool.join()
 
     print(f"{Fore.LIGHTCYAN_EX}[{Fore.LIGHTGREEN_EX}-{Fore.LIGHTCYAN_EX}] {Fore.WHITE}Grabbing Domain From {Fore.LIGHTGREEN_EX}{len(all_pages_link)} {Fore.WHITE}Pages")
 
-    pools = ThreadPool(100)
+    pools = ThreadPool(20)
     pools.map(CubDomain_GetDomain, all_pages_link)
     pools.close()
     pools.join()
