@@ -43,8 +43,7 @@ def Menu():
 {Fore.LIGHTRED_EX}[{Fore.WHITE}3{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber By TLD (azstats.org)
 {Fore.LIGHTRED_EX}[{Fore.WHITE}4{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber By TLD (pagesinventory.com)
 {Fore.LIGHTRED_EX}[{Fore.WHITE}5{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber By TLD (topsitessearch.com)
-{Fore.LIGHTRED_EX}[{Fore.WHITE}6{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber Domain Random (www.topmillion.net)
-{Fore.LIGHTRED_EX}[{Fore.WHITE}7{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber By Date (www.dubdomain.com)\n"""
+{Fore.LIGHTRED_EX}[{Fore.WHITE}6{Fore.LIGHTRED_EX}] {Fore.WHITE}Grabber Domain Random (www.topmillion.net)\n"""
     print(menus)
     choose = int(input(f"{Fore.LIGHTRED_EX}[{Fore.WHITE}?{Fore.LIGHTRED_EX}] {Fore.WHITE}Choose : "))
 
