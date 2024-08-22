@@ -180,7 +180,7 @@ def CubDomain_GetDomain(urls: str):
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
         }, timeout=15).text
 
-        all_domains = re.findall('<a href="https://www.cubdomain.com/site/(.*?)">', req)
+        all_domains = re.findall(r'<a href=https://www.cubdomain.com/site/(.*?)>', req)
         
         if len(all_domains) == 1:
             sys.stdout.write(f"\n{Fore.LIGHTCYAN_EX}[{Fore.LIGHTBLUE_EX}-{Fore.LIGHTCYAN_EX}] {Fore.WHITE}Failed Grabbed")
@@ -197,7 +197,7 @@ def CubDomain_GetAllPages(date: str):
         req = requests.get(f"https://www.cubdomain.com/domains-registered-by-date/{date}/1", headers={
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
         }, timeout=15).text
-        all_pages = re.findall('<a class="page-link" href="(.*?)">', req)[:-1]
+        all_pages = re.findall(r'<a class=page-link href=(.*?)>', req)[:-1]
         for j in all_pages:
             all_pages_link.append(j)
     except:
